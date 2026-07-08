@@ -97,13 +97,16 @@ const fetched = new Date().toISOString();
 console.log(`Built: ${totalDevices} devices across ${manufacturers.length} manufacturers`);
 
 const data = { fetched, manufacturers };
-const dateStr = new Date(fetched).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const d = new Date(fetched);
+const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+const version = `v${d.getUTCFullYear()}.${String(d.getUTCMonth()+1).padStart(2,"0")}.${String(d.getUTCDate()).padStart(2,"0")}`;
 const subtitle = `${totalDevices} devices · ${manufacturers.length} manufacturers · Updated ${dateStr}`;
 
 const template = readFileSync(join(root, "src/template.html"), "utf8");
 const html = template
   .replace("__DEVICE_DATA__", JSON.stringify(data))
-  .replace("__SUBTITLE__", subtitle);
+  .replace("__SUBTITLE__", subtitle)
+  .replace("__VERSION__", version);
 
 writeFileSync(join(root, "index.html"), html, "utf8");
 console.log(`Written: index.html (${(html.length / 1024 / 1024).toFixed(1)} MB)`);
