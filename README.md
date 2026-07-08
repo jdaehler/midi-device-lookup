@@ -4,6 +4,9 @@ Browse CC and NRPN parameters for 400+ hardware MIDI devices — directly in you
 
 🔗 **[jdaehler.github.io/midi-device-lookup](https://jdaehler.github.io/midi-device-lookup/)**
 
+![MIDI Device Lookup — device list](screenshots/dark-list.png)
+![MIDI Device Lookup — device detail](screenshots/dark-detail.png)
+
 ---
 
 ## What it does
