@@ -15,8 +15,8 @@
   --border-mid:  #1e1e2e;
   --text:        #ccc;
   --text-bright: #e0e0e0;
-  --text-dim:    #555;
-  --text-faint:  #444;
+  --text-dim:    #888;
+  --text-faint:  #666;
   --accent:      hsl(300,100%,50%);
   --blue:        hsl(210,80%,65%);
   --mfr-bg:      hsl(220,30%,14%);
@@ -157,44 +157,46 @@ body {
 .result-view.hidden { display: none; }
 
 .device-header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-mid); flex-wrap: wrap; gap: 8px; }
-.device-name { font-size: 15px; font-weight: 700; color: var(--text-bright); }
-.device-manufacturer { font-size: 12px; color: var(--blue); margin-left: 8px; }
+.device-name { font-size: 20px; font-weight: 400; color: var(--text-bright); }
+.device-manufacturer { font-size: 15px; color: var(--blue); margin-left: 10px; }
 .device-actions { display: flex; gap: 6px; }
 
-.back-btn, .copy-btn {
-  background: var(--bg-raised); color: var(--text-dim);
-  border: 1px solid var(--border); border-radius: 4px;
-  padding: 5px 12px; cursor: pointer; font-size: 11px;
-  transition: background 0.1s;
+.back-btn, .copy-btn, .source-btn {
+  background: var(--bg-raised); color: var(--text);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 16px; cursor: pointer; font-size: 14px;
+  transition: background 0.1s, border-color 0.1s;
+  text-decoration: none; display: inline-block;
 }
-.back-btn:hover, .copy-btn:hover { color: var(--text); }
+.back-btn:hover, .copy-btn:hover, .source-btn:hover { border-color: var(--blue); color: var(--text-bright); }
 .copy-flash { color: var(--green) !important; border-color: color-mix(in srgb, var(--green) 40%, transparent) !important; }
 
 .table-filter input {
   width: 100%; background: var(--input-bg); color: var(--text-bright);
-  border: 1px solid var(--border); border-radius: 5px;
-  padding: 7px 10px; font-size: 12px; outline: none;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 10px 12px; font-size: 14px; outline: none;
+  transition: border-color 0.15s;
 }
-.table-filter input:focus { border-color: var(--accent); }
+.table-filter input:focus { border-color: var(--blue); }
 
 .table-wrap { overflow-x: auto; border: 1px solid var(--border-mid); border-radius: 5px; }
-table { width: 100%; border-collapse: collapse; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
 thead th {
-  position: sticky; top: 0; background: var(--thead-bg);
-  color: var(--thead-text); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
-  text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap;
+  position: sticky; top: 0; background: var(--blue);
+  color: #fff; text-transform: uppercase; font-size: 13px; letter-spacing: 0.6px; font-weight: 700;
+  text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 tbody td { padding: 5px 8px; border-bottom: 1px solid var(--td-border); vertical-align: top; font-size: 13px; }
 tbody tr:hover td { background: var(--td-hover); }
 tbody tr { cursor: pointer; }
-.sec-divider td { background: var(--sec-bg); color: var(--sec-text); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 8px; border-bottom: 1px solid var(--border-mid); pointer-events: none; }
-.col-param { color: var(--text-bright); font-weight: 600; }
+.sec-divider td { background: var(--mfr-bg); color: var(--blue); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 8px; border-bottom: 1px solid var(--mfr-border); pointer-events: none; }
+.col-param { color: var(--text-bright); font-weight: 400; }
 .col-param .desc { display: block; color: var(--text-dim); font-weight: 400; font-size: 12px; margin-top: 1px; }
 .col-cc { color: var(--blue); white-space: nowrap; font-family: monospace; }
 .col-nrpn { color: var(--purple); white-space: nowrap; font-family: monospace; font-size: 12px; }
 .col-range { color: var(--green); white-space: nowrap; font-size: 12px; }
-.col-usage { color: var(--text); font-size: 12px; }
-.col-notes { color: var(--text-dim); font-style: italic; font-size: 12px; }
+.col-usage { color: var(--text); font-size: 13px; font-weight: 400; word-break: break-word; overflow-wrap: break-word; min-width: 160px; }
+.col-notes { color: var(--text-dim); font-style: italic; font-size: 12px; word-break: break-word; overflow-wrap: break-word; }
 .empty-cell { color: var(--empty); }
 .row-count { color: var(--text-dim); font-size: 12px; }
 
@@ -246,6 +248,7 @@ tbody tr { cursor: pointer; }
         <span class="device-manufacturer" id="device-manufacturer"></span>
       </div>
       <div class="device-actions">
+        <a class="source-btn" id="source-btn" target="_blank" rel="noopener">CSV ↗</a>
         <button class="copy-btn" id="copy-btn" onclick="copyTable()">Copy TSV</button>
         <button class="back-btn" id="back-btn">← Back</button>
       </div>
@@ -336,6 +339,13 @@ function renderChips() {
 function esc(s) {
   return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
 }
+function fmtCell(s) {
+  var h = esc(s);
+  h = h.replace(/;\s*/g, ";<br>");
+  if (/^\d+:/.test(s)) h = h.replace(/,\s*(\d+:)/g, ",<br>$1");
+  h = h.replace(/([^\s<>])\.?(Bits?\s*\d)/g, "$1<br>$2");
+  return h;
+}
 function setStatus(text, isError) {
   var el = document.getElementById("status");
   el.textContent = text||"";
@@ -409,6 +419,9 @@ function showDevice(d) {
   document.getElementById("status").classList.add("hidden");
   document.getElementById("device-name").textContent = d.device;
   document.getElementById("device-manufacturer").textContent = d.manufacturer;
+  document.getElementById("source-btn").href =
+    "https://github.com/pencilresearch/midi/blob/main/"+
+    encodeURIComponent(d.manufacturer)+"/"+encodeURIComponent(d.device)+".csv";
   document.getElementById("table-filter-input").value = "";
   renderTable("");
   document.getElementById("table-filter-input").focus();
@@ -455,7 +468,7 @@ function renderTable(filter) {
       secTr.innerHTML = '<td colspan="6">'+esc(sec)+'</td>';
       tbody.appendChild(secTr);
     }
-    var paramHtml = '<span class="col-param">'+esc(name||"–")+"</span>";
+    var paramHtml = esc(name||"–");
     if (desc && desc !== name) paramHtml += '<span class="desc">'+esc(desc)+"</span>";
     var cc = cmb ? (clb ? cmb+"/"+clb : cmb) : "";
     var nrpn = nmb ? (nlb ? nmb+"."+nlb : nmb) : "";
@@ -464,12 +477,12 @@ function renderTable(filter) {
     var copyVal = cc || nrpn;
     if (copyVal) tr.title = "Click to copy "+(cc?"CC":"NRPN")+" "+copyVal;
     tr.innerHTML =
-      "<td>"+paramHtml+"</td>"+
+      '<td class="col-param">'+paramHtml+"</td>"+
       '<td class="col-cc">'+(cc?esc(cc):'<span class="empty-cell">–</span>')+"</td>"+
       '<td class="col-nrpn">'+(nrpn?esc(nrpn):'<span class="empty-cell">–</span>')+"</td>"+
       '<td class="col-range">'+(range?esc(range):'<span class="empty-cell">–</span>')+"</td>"+
-      '<td class="col-usage">'+(use?esc(use):"")+"</td>"+
-      '<td class="col-notes">'+(not?esc(not):"")+"</td>";
+      '<td class="col-usage">'+(use?fmtCell(use):"")+"</td>"+
+      '<td class="col-notes">'+(not?fmtCell(not):"")+"</td>";
     if (copyVal) {
       tr.addEventListener("click", function() {
         navigator.clipboard.writeText(copyVal).then(function() {
