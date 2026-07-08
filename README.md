@@ -51,4 +51,13 @@ Requires Node.js 18+. Fetches ~400 CSV files from GitHub and writes `index.html`
 
 ---
 
+## What's New
+
+**v2026.07.08**
+- Light / dark mode toggle (respects system theme, choice saved in browser)
+- Clear button in search field
+- Version number shown in header
+
+---
+
 Made by [ARPMAN / WireDrifter](https://youtube.com/@WireDrifter)
