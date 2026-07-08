@@ -88,10 +88,11 @@
 
 /* ── Reset ── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
+.hidden { display: none !important; }
 html { height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--bg); color: var(--text); font-size: 13px;
+  background: var(--bg); color: var(--text); font-size: 15px;
   min-height: 100vh; display: flex; flex-direction: column;
   transition: background 0.15s, color 0.15s;
 }
@@ -226,7 +227,7 @@ tbody tr { cursor: pointer; }
     <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
   </div>
 
-  <div class="search-bar">
+  <div class="search-bar" id="search-bar">
     <input type="text" id="search-input" placeholder='Search manufacturer or device, e.g. "Moog Matriarch"…' autocomplete="off"/>
     <button class="clear-btn" id="clear-btn" onclick="clearSearch()" title="Clear">✕</button>
   </div>
@@ -403,6 +404,9 @@ function showDevice(d) {
   currentParams = d.params;
   document.getElementById("result-view").classList.add("hidden");
   document.getElementById("device-view").classList.add("active");
+  document.getElementById("search-bar").classList.add("hidden");
+  document.getElementById("chips-bar").classList.add("hidden");
+  document.getElementById("status").classList.add("hidden");
   document.getElementById("device-name").textContent = d.device;
   document.getElementById("device-manufacturer").textContent = d.manufacturer;
   document.getElementById("table-filter-input").value = "";
@@ -414,6 +418,9 @@ function showDevice(d) {
 function backToSearch() {
   document.getElementById("device-view").classList.remove("active");
   document.getElementById("result-view").classList.remove("hidden");
+  document.getElementById("search-bar").classList.remove("hidden");
+  document.getElementById("chips-bar").classList.remove("hidden");
+  document.getElementById("status").classList.remove("hidden");
   var q = document.getElementById("search-input").value;
   renderResults(q);
   document.getElementById("search-input").focus();
