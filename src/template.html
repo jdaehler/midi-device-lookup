@@ -1,113 +1,271 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>MIDI Device Lookup</title>
-<meta name="description" content="Browse CC and NRPN parameters for 399+ hardware MIDI devices. No PDF manuals needed."/>
+<meta name="description" content="Browse CC and NRPN parameters for 400+ hardware MIDI devices. No PDF manuals needed."/>
 <style>
+/* ── Themes ── */
+:root[data-theme="dark"] {
+  --bg:          #0d0d15;
+  --bg-raised:   #111118;
+  --bg-sunken:   #08080d;
+  --border:      #252535;
+  --border-mid:  #1e1e2e;
+  --text:        #ccc;
+  --text-bright: #e0e0e0;
+  --text-dim:    #555;
+  --text-faint:  #444;
+  --accent:      hsl(300,100%,50%);
+  --blue:        hsl(210,80%,65%);
+  --mfr-bg:      hsl(220,30%,14%);
+  --mfr-border:  hsl(220,25%,18%);
+  --mfr-text:    #ffffff;
+  --row-border:  #1a1a24;
+  --row-hover:   #1e1e35;
+  --sec-bg:      #0c0c18;
+  --sec-text:    #7070b0;
+  --thead-bg:    #161620;
+  --thead-text:  #666;
+  --td-border:   #191924;
+  --td-hover:    #14141e;
+  --input-bg:    #111118;
+  --empty:       #252530;
+  --green:       #4aba4a;
+  --purple:      #7a6aef;
+  --chip-bg:     #111118;
+  --chip-border: #252535;
+  --chip-text:   #555;
+  --toggle-bg:   #1a1a22;
+  --toggle-border: #252535;
+  --toggle-text: #888;
+  --footer-text: #444;
+  --footer-link: #555;
+  --toast-bg:    #1a2a1a;
+  --toast-text:  #4aba4a;
+  --toast-border:#2a4a2a;
+}
+:root[data-theme="light"] {
+  --bg:          hsl(240,15%,97%);
+  --bg-raised:   #ffffff;
+  --bg-sunken:   hsl(240,15%,93%);
+  --border:      hsl(240,10%,82%);
+  --border-mid:  hsl(240,10%,88%);
+  --text:        #1a1a2e;
+  --text-bright: #111;
+  --text-dim:    #777;
+  --text-faint:  #aaa;
+  --accent:      hsl(300,100%,35%);
+  --blue:        hsl(210,80%,38%);
+  --mfr-bg:      hsl(220,25%,91%);
+  --mfr-border:  hsl(220,20%,84%);
+  --mfr-text:    #1a1a2e;
+  --row-border:  hsl(240,10%,90%);
+  --row-hover:   hsl(240,20%,94%);
+  --sec-bg:      hsl(240,15%,93%);
+  --sec-text:    hsl(240,40%,45%);
+  --thead-bg:    hsl(240,10%,96%);
+  --thead-text:  #999;
+  --td-border:   hsl(240,10%,91%);
+  --td-hover:    hsl(240,15%,96%);
+  --input-bg:    #ffffff;
+  --empty:       #ccc;
+  --green:       #2a8a2a;
+  --purple:      #5a4adf;
+  --chip-bg:     #ffffff;
+  --chip-border: hsl(240,10%,82%);
+  --chip-text:   #888;
+  --toggle-bg:   #ffffff;
+  --toggle-border: hsl(240,10%,82%);
+  --toggle-text: #666;
+  --footer-text: #aaa;
+  --footer-link: #888;
+  --toast-bg:    #e8f5e8;
+  --toast-text:  #2a6a2a;
+  --toast-border:#b0d8b0;
+}
+
+/* ── Reset ── */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #0d0d15; color: #ccc; font-size: 13px;
+  background: var(--bg); color: var(--text); font-size: 13px;
   min-height: 100vh; display: flex; flex-direction: column;
+  transition: background 0.15s, color 0.15s;
 }
 
 /* ── Layout ── */
 .app { max-width: 1000px; width: 100%; margin: 0 auto; padding: 20px 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
 /* ── Header ── */
-.header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
-.title { font-size: 18px; font-weight: 700; color: hsl(300,100%,50%); letter-spacing: 1px; }
-.subtitle { font-size: 11px; color: #555; }
+.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.header-left { display: flex; flex-direction: column; gap: 2px; }
+.title { font-size: 18px; font-weight: 700; color: var(--accent); letter-spacing: 1px; }
+.subtitle { font-size: 11px; color: var(--text-dim); }
+.theme-btn {
+  background: var(--toggle-bg); color: var(--toggle-text);
+  border: 1px solid var(--toggle-border); border-radius: 6px;
+  padding: 5px 10px; cursor: pointer; font-size: 14px; flex-shrink: 0;
+  transition: background 0.15s;
+}
+.theme-btn:hover { color: var(--text); }
 
 /* ── Search ── */
 .search-bar input {
-  width: 100%; background: #111118; color: #e0e0e0;
-  border: 1px solid #252535; border-radius: 6px;
+  width: 100%; background: var(--input-bg); color: var(--text-bright);
+  border: 1px solid var(--border); border-radius: 6px;
   padding: 10px 12px; font-size: 14px; outline: none;
+  transition: border-color 0.15s;
 }
-.search-bar input:focus { border-color: hsl(300,100%,50%); }
+.search-bar input:focus { border-color: var(--accent); }
 
 /* ── Chips ── */
 .chips-bar { display: flex; gap: 5px; flex-wrap: wrap; min-height: 20px; }
-.chip { background: #111118; border: 1px solid #252535; border-radius: 10px; padding: 2px 10px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
-.chip:hover { color: hsl(300,100%,65%); border-color: hsl(300,100%,40%); }
-.chip-new { background: #0a1a0a; border-color: #1e3a1e; color: #4aba4a !important; }
-.chip-new:hover { border-color: #4aba4a !important; color: #6dda6d !important; }
+.chip { background: var(--chip-bg); border: 1px solid var(--chip-border); border-radius: 10px; padding: 2px 10px; font-size: 11px; color: var(--chip-text); cursor: pointer; white-space: nowrap; }
+.chip:hover { color: var(--accent); border-color: var(--accent); }
 
 /* ── Status ── */
-.status { font-size: 11px; color: #666; min-height: 16px; }
-.status.error { color: #ff6b6b; }
+.status { font-size: 11px; color: var(--text-dim); min-height: 16px; }
+.status.error { color: #e05555; }
 
 /* ── Result list ── */
-.result-list { border-top: 1px solid #1e1e2e; }
+.result-list { border-top: 1px solid var(--border-mid); }
 .result-item {
   display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 4px; border-bottom: 1px solid #1a1a24; cursor: pointer;
+  padding: 8px 4px; border-bottom: 1px solid var(--row-border); cursor: pointer;
 }
-.result-item:hover { background: #1e1e35; }
-.result-item .manufacturer { color: hsl(210,80%,65%); font-weight: 600; margin-right: 6px; }
-.result-item .device { color: hsl(210,80%,65%); }
-.result-item .count { color: #666; font-size: 10px; flex-shrink: 0; }
-.mfr-header { color: #ffffff; background: hsl(220,30%,14%); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 8px; border-bottom: 1px solid hsl(220,25%,18%); }
-.badge-new { display: inline-block; font-size: 8px; font-weight: 700; color: #4aba4a; border: 1px solid #1e3a1e; border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: middle; }
+.result-item:hover { background: var(--row-hover); }
+.result-item .manufacturer { color: var(--blue); font-weight: 600; margin-right: 6px; }
+.result-item .device { color: var(--blue); }
+.result-item .count { color: var(--text-dim); font-size: 10px; flex-shrink: 0; }
+.mfr-header { color: var(--mfr-text); background: var(--mfr-bg); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 8px; border-bottom: 1px solid var(--mfr-border); }
+.badge-new { display: inline-block; font-size: 8px; font-weight: 700; color: var(--green); border: 1px solid; border-color: color-mix(in srgb, var(--green) 40%, transparent); border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: middle; }
 
 /* ── Device view ── */
 .device-view { display: none; flex-direction: column; gap: 10px; }
 .device-view.active { display: flex; }
 .result-view.hidden { display: none; }
 
-.device-header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid #1e1e2e; flex-wrap: wrap; gap: 8px; }
-.device-name { font-size: 15px; font-weight: 700; color: #fff; }
-.device-manufacturer { font-size: 12px; color: hsl(210,80%,65%); margin-left: 8px; }
+.device-header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid var(--border-mid); flex-wrap: wrap; gap: 8px; }
+.device-name { font-size: 15px; font-weight: 700; color: var(--text-bright); }
+.device-manufacturer { font-size: 12px; color: var(--blue); margin-left: 8px; }
 .device-actions { display: flex; gap: 6px; }
 
 .back-btn, .copy-btn {
-  background: #1a1a22; color: #888; border: 1px solid #252535;
-  border-radius: 4px; padding: 5px 12px; cursor: pointer; font-size: 11px;
+  background: var(--bg-raised); color: var(--text-dim);
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 5px 12px; cursor: pointer; font-size: 11px;
+  transition: background 0.1s;
 }
-.back-btn:hover, .copy-btn:hover { background: #22223a; color: #ccc; }
-.copy-flash { color: #4aba4a !important; border-color: #2a4a2a !important; }
+.back-btn:hover, .copy-btn:hover { color: var(--text); }
+.copy-flash { color: var(--green) !important; border-color: color-mix(in srgb, var(--green) 40%, transparent) !important; }
 
 .table-filter input {
-  width: 100%; background: #111118; color: #e0e0e0;
-  border: 1px solid #252535; border-radius: 5px;
+  width: 100%; background: var(--input-bg); color: var(--text-bright);
+  border: 1px solid var(--border); border-radius: 5px;
   padding: 7px 10px; font-size: 12px; outline: none;
 }
-.table-filter input:focus { border-color: hsl(300,100%,50%); }
+.table-filter input:focus { border-color: var(--accent); }
 
-.table-wrap { overflow-x: auto; border: 1px solid #1e1e2e; border-radius: 5px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--border-mid); border-radius: 5px; }
 table { width: 100%; border-collapse: collapse; }
 thead th {
-  position: sticky; top: 0; background: #161620;
-  color: #666; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;
-  text-align: left; padding: 6px 8px; border-bottom: 1px solid #252535; white-space: nowrap;
+  position: sticky; top: 0; background: var(--thead-bg);
+  color: var(--thead-text); text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;
+  text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); white-space: nowrap;
 }
-tbody td { padding: 5px 8px; border-bottom: 1px solid #191924; vertical-align: top; font-size: 11px; }
-tbody tr:hover td { background: #14141e; }
+tbody td { padding: 5px 8px; border-bottom: 1px solid var(--td-border); vertical-align: top; font-size: 11px; }
+tbody tr:hover td { background: var(--td-hover); }
 tbody tr { cursor: pointer; }
-.sec-divider td { background: #0c0c18; color: #7070b0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 8px; border-bottom: 1px solid #1e1e2e; pointer-events: none; }
-.col-param { color: #fff; font-weight: 600; }
-.col-param .desc { display: block; color: #aaa; font-weight: 400; font-size: 10px; margin-top: 1px; }
-.col-cc { color: hsl(210,80%,65%); white-space: nowrap; font-family: monospace; }
-.col-nrpn { color: #7a6aef; white-space: nowrap; font-family: monospace; font-size: 10px; }
-.col-range { color: #4aba4a; white-space: nowrap; font-size: 10px; }
-.col-usage { color: #bbb; font-size: 10px; }
-.col-notes { color: #999; font-style: italic; font-size: 10px; }
-.empty-cell { color: #252530; }
-.row-count { color: #555; font-size: 10px; }
+.sec-divider td { background: var(--sec-bg); color: var(--sec-text); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 8px; border-bottom: 1px solid var(--border-mid); pointer-events: none; }
+.col-param { color: var(--text-bright); font-weight: 600; }
+.col-param .desc { display: block; color: var(--text-dim); font-weight: 400; font-size: 10px; margin-top: 1px; }
+.col-cc { color: var(--blue); white-space: nowrap; font-family: monospace; }
+.col-nrpn { color: var(--purple); white-space: nowrap; font-family: monospace; font-size: 10px; }
+.col-range { color: var(--green); white-space: nowrap; font-size: 10px; }
+.col-usage { color: var(--text); font-size: 10px; }
+.col-notes { color: var(--text-dim); font-style: italic; font-size: 10px; }
+.empty-cell { color: var(--empty); }
+.row-count { color: var(--text-dim); font-size: 10px; }
 
-/* ── Copied toast ── */
-.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a2a1a; color: #4aba4a; border: 1px solid #2a4a2a; border-radius: 6px; padding: 6px 16px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+/* ── Toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--toast-bg); color: var(--toast-text); border: 1px solid var(--toast-border); border-radius: 6px; padding: 6px 16px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; }
 
 /* ── Footer ── */
-.page-footer { text-align: center; padding: 16px; font-size: 10px; color: #444; border-top: 1px solid #1a1a24; margin-top: auto; }
-.page-footer a { color: #555; text-decoration: none; }
-.page-footer a:hover { color: #888; }
+.page-footer { text-align: center; padding: 16px; font-size: 10px; color: var(--footer-text); border-top: 1px solid var(--border-mid); margin-top: auto; }
+.page-footer a { color: var(--footer-link); text-decoration: none; }
+.page-footer a:hover { color: var(--text); }
 </style>
+<script>
+// Apply saved theme before render to avoid flash
+(function() {
+  var saved = localStorage.getItem("mdl-theme");
+  var preferred = saved || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+  document.documentElement.setAttribute("data-theme", preferred);
+})();
+</script>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="title">MIDI DEVICE LOOKUP</div>
+      <div class="subtitle">__SUBTITLE__</div>
+    </div>
+    <button class="theme-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">🌙</button>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder='Search manufacturer or device, e.g. "Moog Matriarch"…' autocomplete="off"/>
+  </div>
+
+  <div class="chips-bar" id="chips-bar"></div>
+  <div class="status" id="status"></div>
+
+  <div id="result-view" class="result-view">
+    <div class="result-list" id="result-list"></div>
+  </div>
+
+  <div id="device-view" class="device-view">
+    <div class="device-header">
+      <div>
+        <span class="device-name" id="device-name"></span>
+        <span class="device-manufacturer" id="device-manufacturer"></span>
+      </div>
+      <div class="device-actions">
+        <button class="copy-btn" id="copy-btn" onclick="copyTable()">Copy TSV</button>
+        <button class="back-btn" id="back-btn">← Back</button>
+      </div>
+    </div>
+    <div class="table-filter">
+      <input type="text" id="table-filter-input" placeholder="Filter by parameter name, CC number, notes…" autocomplete="off"/>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Parameter</th><th>CC</th><th>NRPN</th>
+          <th>Range</th><th>Usage</th><th>Notes</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="row-count" id="row-count"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="page-footer">
+  Data: <a href="https://github.com/pencilresearch/midi" target="_blank">pencilresearch/midi</a> (CC-BY-SA 4.0) ·
+  <a href="https://github.com/jdaehler/abletonliveextensions/releases/tag/midi-device-lookup" target="_blank">Ableton Extension</a> ·
+  Made by <a href="https://youtube.com/@WireDrifter" target="_blank">ARPMAN / WireDrifter</a>
+</div>
+
 <script>
 var F = {SEC:0,NAME:1,DESC:2,CMB:3,CLB:4,CMIN:5,CMAX:6,NMB:7,NLB:8,NMIN:9,NMAX:10,USE:11,NOT:12};
 var DATA = __DEVICE_DATA__;
@@ -123,6 +281,14 @@ var currentParams = [];
 var HIST_KEY = "mdl-history";
 var searchHistory = [];
 try { searchHistory = JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); } catch(e) {}
+
+function toggleTheme() {
+  var html = document.documentElement;
+  var next = html.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  html.setAttribute("data-theme", next);
+  localStorage.setItem("mdl-theme", next);
+  document.getElementById("theme-btn").textContent = next === "dark" ? "🌙" : "☀️";
+}
 
 function saveHistory(q) {
   if (!q || q.trim().length < 2) return;
@@ -210,7 +376,7 @@ function renderResults(query) {
   });
   if (matches.length > 300) {
     var more = document.createElement("div");
-    more.style.cssText = "color:#444;padding:8px 4px;font-size:11px";
+    more.style.cssText = "color:var(--text-faint);padding:8px 4px;font-size:11px";
     more.textContent = "… and "+(matches.length-300)+" more. Narrow your search.";
     list.appendChild(more);
   }
@@ -310,6 +476,9 @@ function copyTable() {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  var theme = document.documentElement.getAttribute("data-theme");
+  document.getElementById("theme-btn").textContent = theme === "dark" ? "🌙" : "☀️";
+
   document.getElementById("search-input").addEventListener("input", function(e) {
     renderResults(e.target.value);
   });
@@ -325,62 +494,5 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("search-input").focus();
 });
 </script>
-</head>
-<body>
-<div class="app">
-
-  <div class="header">
-    <div>
-      <div class="title">MIDI DEVICE LOOKUP</div>
-      <div class="subtitle">__SUBTITLE__</div>
-    </div>
-  </div>
-
-  <div class="search-bar">
-    <input type="text" id="search-input" placeholder='Search manufacturer or device, e.g. "Moog Matriarch"…' autocomplete="off"/>
-  </div>
-
-  <div class="chips-bar" id="chips-bar"></div>
-  <div class="status" id="status"></div>
-
-  <div id="result-view" class="result-view">
-    <div class="result-list" id="result-list"></div>
-  </div>
-
-  <div id="device-view" class="device-view">
-    <div class="device-header">
-      <div>
-        <span class="device-name" id="device-name"></span>
-        <span class="device-manufacturer" id="device-manufacturer"></span>
-      </div>
-      <div class="device-actions">
-        <button class="copy-btn" id="copy-btn" onclick="copyTable()">Copy TSV</button>
-        <button class="back-btn" id="back-btn">← Back</button>
-      </div>
-    </div>
-    <div class="table-filter">
-      <input type="text" id="table-filter-input" placeholder="Filter by parameter name, CC number, notes…" autocomplete="off"/>
-    </div>
-    <div class="table-wrap">
-      <table>
-        <thead><tr>
-          <th>Parameter</th><th>CC</th><th>NRPN</th>
-          <th>Range</th><th>Usage</th><th>Notes</th>
-        </tr></thead>
-        <tbody id="table-body"></tbody>
-      </table>
-    </div>
-    <div class="row-count" id="row-count"></div>
-  </div>
-
-</div>
-
-<div class="toast" id="toast"></div>
-
-<div class="page-footer">
-  Data: <a href="https://github.com/pencilresearch/midi" target="_blank">pencilresearch/midi</a> (CC-BY-SA 4.0) ·
-  <a href="https://github.com/jdaehler/abletonliveextensions/releases/tag/midi-device-lookup" target="_blank">Ableton Extension</a> ·
-  Made by <a href="https://youtube.com/@WireDrifter" target="_blank">ARPMAN / WireDrifter</a>
-</div>
 </body>
 </html>
