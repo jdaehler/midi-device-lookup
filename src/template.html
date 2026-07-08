@@ -113,13 +113,20 @@ body {
 .theme-btn:hover { color: var(--text); }
 
 /* ── Search ── */
+.search-bar { position: relative; }
 .search-bar input {
   width: 100%; background: var(--input-bg); color: var(--text-bright);
   border: 1px solid var(--border); border-radius: 6px;
-  padding: 10px 12px; font-size: 14px; outline: none;
+  padding: 10px 36px 10px 12px; font-size: 14px; outline: none;
   transition: border-color 0.15s;
 }
 .search-bar input:focus { border-color: var(--accent); }
+.clear-btn {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--text-dim);
+  font-size: 16px; padding: 2px 4px; display: none; line-height: 1;
+}
+.clear-btn:hover { color: var(--text); }
 
 /* ── Chips ── */
 .chips-bar { display: flex; gap: 5px; flex-wrap: wrap; min-height: 20px; }
@@ -221,6 +228,7 @@ tbody tr { cursor: pointer; }
 
   <div class="search-bar">
     <input type="text" id="search-input" placeholder='Search manufacturer or device, e.g. "Moog Matriarch"…' autocomplete="off"/>
+    <button class="clear-btn" id="clear-btn" onclick="clearSearch()" title="Clear">✕</button>
   </div>
 
   <div class="chips-bar" id="chips-bar"></div>
@@ -263,6 +271,7 @@ tbody tr { cursor: pointer; }
 <div class="page-footer">
   Data: <a href="https://github.com/pencilresearch/midi" target="_blank">pencilresearch/midi</a> (CC-BY-SA 4.0) ·
   <a href="https://github.com/jdaehler/abletonliveextensions/releases/tag/midi-device-lookup" target="_blank">Ableton Extension</a> ·
+  <a href="https://github.com/jdaehler/midi-device-lookup" target="_blank">GitHub</a> ·
   Made by <a href="https://youtube.com/@WireDrifter" target="_blank">ARPMAN / WireDrifter</a>
 </div>
 
@@ -281,6 +290,14 @@ var currentParams = [];
 var HIST_KEY = "mdl-history";
 var searchHistory = [];
 try { searchHistory = JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); } catch(e) {}
+
+function clearSearch() {
+  var inp = document.getElementById("search-input");
+  inp.value = "";
+  document.getElementById("clear-btn").style.display = "none";
+  renderResults("");
+  inp.focus();
+}
 
 function toggleTheme() {
   var html = document.documentElement;
@@ -480,7 +497,9 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("theme-btn").textContent = theme === "dark" ? "🌙" : "☀️";
 
   document.getElementById("search-input").addEventListener("input", function(e) {
-    renderResults(e.target.value);
+    var val = e.target.value;
+    document.getElementById("clear-btn").style.display = val ? "block" : "none";
+    renderResults(val);
   });
   document.getElementById("table-filter-input").addEventListener("input", function(e) {
     renderTable(e.target.value);
