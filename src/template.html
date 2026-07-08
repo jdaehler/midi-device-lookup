@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>MIDI Device Lookup</title>
+<meta name="description" content="Browse CC and NRPN parameters for 399+ hardware MIDI devices. No PDF manuals needed."/>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #0d0d15; color: #ccc; font-size: 13px;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ── Layout ── */
+.app { max-width: 1000px; width: 100%; margin: 0 auto; padding: 20px 16px; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+/* ── Header ── */
+.header { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.title { font-size: 18px; font-weight: 700; color: hsl(300,100%,50%); letter-spacing: 1px; }
+.subtitle { font-size: 11px; color: #555; }
+
+/* ── Search ── */
+.search-bar input {
+  width: 100%; background: #111118; color: #e0e0e0;
+  border: 1px solid #252535; border-radius: 6px;
+  padding: 10px 12px; font-size: 14px; outline: none;
+}
+.search-bar input:focus { border-color: hsl(300,100%,50%); }
+
+/* ── Chips ── */
+.chips-bar { display: flex; gap: 5px; flex-wrap: wrap; min-height: 20px; }
+.chip { background: #111118; border: 1px solid #252535; border-radius: 10px; padding: 2px 10px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; }
+.chip:hover { color: hsl(300,100%,65%); border-color: hsl(300,100%,40%); }
+.chip-new { background: #0a1a0a; border-color: #1e3a1e; color: #4aba4a !important; }
+.chip-new:hover { border-color: #4aba4a !important; color: #6dda6d !important; }
+
+/* ── Status ── */
+.status { font-size: 11px; color: #666; min-height: 16px; }
+.status.error { color: #ff6b6b; }
+
+/* ── Result list ── */
+.result-list { border-top: 1px solid #1e1e2e; }
+.result-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 4px; border-bottom: 1px solid #1a1a24; cursor: pointer;
+}
+.result-item:hover { background: #1e1e35; }
+.result-item .manufacturer { color: hsl(210,80%,65%); font-weight: 600; margin-right: 6px; }
+.result-item .device { color: hsl(210,80%,65%); }
+.result-item .count { color: #666; font-size: 10px; flex-shrink: 0; }
+.mfr-header { color: #ffffff; background: hsl(220,30%,14%); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 8px; border-bottom: 1px solid hsl(220,25%,18%); }
+.badge-new { display: inline-block; font-size: 8px; font-weight: 700; color: #4aba4a; border: 1px solid #1e3a1e; border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: middle; }
+
+/* ── Device view ── */
+.device-view { display: none; flex-direction: column; gap: 10px; }
+.device-view.active { display: flex; }
+.result-view.hidden { display: none; }
+
+.device-header { display: flex; align-items: baseline; justify-content: space-between; padding-bottom: 8px; border-bottom: 1px solid #1e1e2e; flex-wrap: wrap; gap: 8px; }
+.device-name { font-size: 15px; font-weight: 700; color: #fff; }
+.device-manufacturer { font-size: 12px; color: hsl(210,80%,65%); margin-left: 8px; }
+.device-actions { display: flex; gap: 6px; }
+
+.back-btn, .copy-btn {
+  background: #1a1a22; color: #888; border: 1px solid #252535;
+  border-radius: 4px; padding: 5px 12px; cursor: pointer; font-size: 11px;
+}
+.back-btn:hover, .copy-btn:hover { background: #22223a; color: #ccc; }
+.copy-flash { color: #4aba4a !important; border-color: #2a4a2a !important; }
+
+.table-filter input {
+  width: 100%; background: #111118; color: #e0e0e0;
+  border: 1px solid #252535; border-radius: 5px;
+  padding: 7px 10px; font-size: 12px; outline: none;
+}
+.table-filter input:focus { border-color: hsl(300,100%,50%); }
+
+.table-wrap { overflow-x: auto; border: 1px solid #1e1e2e; border-radius: 5px; }
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  position: sticky; top: 0; background: #161620;
+  color: #666; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px;
+  text-align: left; padding: 6px 8px; border-bottom: 1px solid #252535; white-space: nowrap;
+}
+tbody td { padding: 5px 8px; border-bottom: 1px solid #191924; vertical-align: top; font-size: 11px; }
+tbody tr:hover td { background: #14141e; }
+tbody tr { cursor: pointer; }
+.sec-divider td { background: #0c0c18; color: #7070b0; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; padding: 4px 8px; border-bottom: 1px solid #1e1e2e; pointer-events: none; }
+.col-param { color: #fff; font-weight: 600; }
+.col-param .desc { display: block; color: #aaa; font-weight: 400; font-size: 10px; margin-top: 1px; }
+.col-cc { color: hsl(210,80%,65%); white-space: nowrap; font-family: monospace; }
+.col-nrpn { color: #7a6aef; white-space: nowrap; font-family: monospace; font-size: 10px; }
+.col-range { color: #4aba4a; white-space: nowrap; font-size: 10px; }
+.col-usage { color: #bbb; font-size: 10px; }
+.col-notes { color: #999; font-style: italic; font-size: 10px; }
+.empty-cell { color: #252530; }
+.row-count { color: #555; font-size: 10px; }
+
+/* ── Copied toast ── */
+.toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a2a1a; color: #4aba4a; border: 1px solid #2a4a2a; border-radius: 6px; padding: 6px 16px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+/* ── Footer ── */
+.page-footer { text-align: center; padding: 16px; font-size: 10px; color: #444; border-top: 1px solid #1a1a24; margin-top: auto; }
+.page-footer a { color: #555; text-decoration: none; }
+.page-footer a:hover { color: #888; }
+</style>
+<script>
+var F = {SEC:0,NAME:1,DESC:2,CMB:3,CLB:4,CMIN:5,CMAX:6,NMB:7,NLB:8,NMIN:9,NMAX:10,USE:11,NOT:12};
+var DATA = __DEVICE_DATA__;
+var NEW_KEYS = new Set([]);
+var allDevices = [];
+(DATA.manufacturers||[]).forEach(function(m) {
+  (m.devices||[]).forEach(function(d) {
+    allDevices.push({manufacturer:m.name, device:d.name, params:d.params||[], isNew:NEW_KEYS.has(m.name+"|"+d.name)});
+  });
+});
+var currentParams = [];
+
+var HIST_KEY = "mdl-history";
+var searchHistory = [];
+try { searchHistory = JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); } catch(e) {}
+
+function saveHistory(q) {
+  if (!q || q.trim().length < 2) return;
+  searchHistory = [q].concat(searchHistory.filter(function(h){return h!==q;})).slice(0,8);
+  try { localStorage.setItem(HIST_KEY, JSON.stringify(searchHistory)); } catch(e) {}
+  renderChips();
+}
+
+function renderChips() {
+  var bar = document.getElementById("chips-bar");
+  if (!bar) return;
+  bar.innerHTML = "";
+  searchHistory.forEach(function(h) {
+    var chip = document.createElement("span");
+    chip.className = "chip";
+    chip.textContent = h;
+    chip.addEventListener("click", function() {
+      var inp = document.getElementById("search-input");
+      inp.value = h;
+      renderResults(h);
+      inp.focus();
+    });
+    bar.appendChild(chip);
+  });
+}
+
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function setStatus(text, isError) {
+  var el = document.getElementById("status");
+  el.textContent = text||"";
+  el.className = isError ? "status error" : "status";
+}
+function showToast(msg) {
+  var t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(function(){ t.classList.remove("show"); }, 1500);
+}
+
+function renderResults(query) {
+  var list = document.getElementById("result-list");
+  list.innerHTML = "";
+
+  if (!query) {
+    setStatus(allDevices.length+" devices", false);
+    var lastMfr = null;
+    allDevices.forEach(function(d) {
+      if (d.manufacturer !== lastMfr) {
+        lastMfr = d.manufacturer;
+        var hdr = document.createElement("div");
+        hdr.className = "mfr-header";
+        hdr.textContent = d.manufacturer;
+        list.appendChild(hdr);
+      }
+      var item = document.createElement("div");
+      item.className = "result-item";
+      item.innerHTML = '<span>'+(d.isNew?'<span class="badge-new">NEW</span>':'')+'<span class="device">'+esc(d.device)+'</span></span><span class="count">'+d.params.length+' params</span>';
+      item.addEventListener("click", function(){showDevice(d);});
+      list.appendChild(item);
+    });
+    return;
+  }
+
+  var terms = query.toLowerCase().split(/\s+/).filter(function(t){return t.length>0;});
+  var matches = allDevices.filter(function(d) {
+    var hay = (d.manufacturer+" "+d.device).toLowerCase();
+    return terms.every(function(t){return hay.indexOf(t)!==-1;});
+  });
+
+  setStatus(matches.length ? matches.length+" result"+(matches.length!==1?"s":"") : "No results", !matches.length);
+  if (!matches.length) return;
+
+  matches.slice(0,300).forEach(function(d) {
+    var item = document.createElement("div");
+    item.className = "result-item";
+    item.innerHTML = '<span><span class="manufacturer">'+esc(d.manufacturer)+'</span><span class="device">'+esc(d.device)+'</span></span>'
+      +'<span class="count">'+d.params.length+' params</span>';
+    item.addEventListener("click", function(){
+      saveHistory(query);
+      showDevice(d);
+    });
+    list.appendChild(item);
+  });
+  if (matches.length > 300) {
+    var more = document.createElement("div");
+    more.style.cssText = "color:#444;padding:8px 4px;font-size:11px";
+    more.textContent = "… and "+(matches.length-300)+" more. Narrow your search.";
+    list.appendChild(more);
+  }
+}
+
+function showDevice(d) {
+  currentParams = d.params;
+  document.getElementById("result-view").classList.add("hidden");
+  document.getElementById("device-view").classList.add("active");
+  document.getElementById("device-name").textContent = d.device;
+  document.getElementById("device-manufacturer").textContent = d.manufacturer;
+  document.getElementById("table-filter-input").value = "";
+  renderTable("");
+  document.getElementById("table-filter-input").focus();
+  window.scrollTo(0,0);
+}
+
+function backToSearch() {
+  document.getElementById("device-view").classList.remove("active");
+  document.getElementById("result-view").classList.remove("hidden");
+  var q = document.getElementById("search-input").value;
+  renderResults(q);
+  document.getElementById("search-input").focus();
+}
+
+function renderTable(filter) {
+  var tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+  var term = (filter||"").toLowerCase().trim();
+  var rows = currentParams;
+  if (term) {
+    rows = rows.filter(function(p) {
+      return (p[F.NAME]||"").toLowerCase().indexOf(term)!==-1
+          || (p[F.DESC]||"").toLowerCase().indexOf(term)!==-1
+          || (p[F.SEC]||"").toLowerCase().indexOf(term)!==-1
+          || (p[F.USE]||"").toLowerCase().indexOf(term)!==-1
+          || (p[F.NOT]||"").toLowerCase().indexOf(term)!==-1
+          || (p[F.CMB]||"").indexOf(term)!==-1
+          || (p[F.NMB]||"").indexOf(term)!==-1;
+    });
+  }
+  var lastSec = null;
+  rows.forEach(function(p) {
+    var sec=p[F.SEC]||"", name=p[F.NAME]||"", desc=p[F.DESC]||"";
+    var cmb=p[F.CMB]||"", clb=p[F.CLB]||"", cmin=p[F.CMIN]||"", cmax=p[F.CMAX]||"";
+    var nmb=p[F.NMB]||"", nlb=p[F.NLB]||"", nmin=p[F.NMIN]||"", nmax=p[F.NMAX]||"";
+    var use=p[F.USE]||"", not=p[F.NOT]||"";
+    if (sec && sec !== lastSec) {
+      lastSec = sec;
+      var secTr = document.createElement("tr");
+      secTr.className = "sec-divider";
+      secTr.innerHTML = '<td colspan="6">'+esc(sec)+'</td>';
+      tbody.appendChild(secTr);
+    }
+    var paramHtml = '<span class="col-param">'+esc(name||"–")+"</span>";
+    if (desc && desc !== name) paramHtml += '<span class="desc">'+esc(desc)+"</span>";
+    var cc = cmb ? (clb ? cmb+"/"+clb : cmb) : "";
+    var nrpn = nmb ? (nlb ? nmb+"."+nlb : nmb) : "";
+    var range = cmb&&cmin&&cmax ? cmin+"–"+cmax : nmb&&nmin&&nmax ? nmin+"–"+nmax : "";
+    var tr = document.createElement("tr");
+    var copyVal = cc || nrpn;
+    if (copyVal) tr.title = "Click to copy "+(cc?"CC":"NRPN")+" "+copyVal;
+    tr.innerHTML =
+      "<td>"+paramHtml+"</td>"+
+      '<td class="col-cc">'+(cc?esc(cc):'<span class="empty-cell">–</span>')+"</td>"+
+      '<td class="col-nrpn">'+(nrpn?esc(nrpn):'<span class="empty-cell">–</span>')+"</td>"+
+      '<td class="col-range">'+(range?esc(range):'<span class="empty-cell">–</span>')+"</td>"+
+      '<td class="col-usage">'+(use?esc(use):"")+"</td>"+
+      '<td class="col-notes">'+(not?esc(not):"")+"</td>";
+    if (copyVal) {
+      tr.addEventListener("click", function() {
+        navigator.clipboard.writeText(copyVal).then(function() {
+          showToast("Copied: "+copyVal);
+        });
+      });
+    }
+    tbody.appendChild(tr);
+  });
+  document.getElementById("row-count").textContent = rows.length+" of "+currentParams.length+" parameters";
+}
+
+function copyTable() {
+  var btn = document.getElementById("copy-btn");
+  var header = ["Parameter","Description","CC","NRPN","Range","Usage","Notes"].join("\t");
+  var lines = currentParams.map(function(p) {
+    var cc = (p[F.CMB]||"") + (p[F.CLB] ? "/"+p[F.CLB] : "");
+    var nrpn = (p[F.NMB]||"") + (p[F.NLB] ? "."+p[F.NLB] : "");
+    var range = p[F.CMB]&&p[F.CMIN]&&p[F.CMAX] ? p[F.CMIN]+"–"+p[F.CMAX]
+              : p[F.NMB]&&p[F.NMIN]&&p[F.NMAX] ? p[F.NMIN]+"–"+p[F.NMAX] : "";
+    return [p[F.NAME]||"",p[F.DESC]||"",cc,nrpn,range,p[F.USE]||"",p[F.NOT]||""].join("\t");
+  });
+  navigator.clipboard.writeText(header+"\n"+lines.join("\n")).then(function() {
+    btn.textContent = "Copied!";
+    btn.classList.add("copy-flash");
+    setTimeout(function(){ btn.textContent = "Copy TSV"; btn.classList.remove("copy-flash"); }, 1500);
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  document.getElementById("search-input").addEventListener("input", function(e) {
+    renderResults(e.target.value);
+  });
+  document.getElementById("table-filter-input").addEventListener("input", function(e) {
+    renderTable(e.target.value);
+  });
+  document.getElementById("back-btn").addEventListener("click", backToSearch);
+  document.addEventListener("keydown", function(e) {
+    if (e.key==="Escape" && document.getElementById("device-view").classList.contains("active")) backToSearch();
+  });
+  renderChips();
+  renderResults("");
+  document.getElementById("search-input").focus();
+});
+</script>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div>
+      <div class="title">MIDI DEVICE LOOKUP</div>
+      <div class="subtitle">__SUBTITLE__</div>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder='Search manufacturer or device, e.g. "Moog Matriarch"…' autocomplete="off"/>
+  </div>
+
+  <div class="chips-bar" id="chips-bar"></div>
+  <div class="status" id="status"></div>
+
+  <div id="result-view" class="result-view">
+    <div class="result-list" id="result-list"></div>
+  </div>
+
+  <div id="device-view" class="device-view">
+    <div class="device-header">
+      <div>
+        <span class="device-name" id="device-name"></span>
+        <span class="device-manufacturer" id="device-manufacturer"></span>
+      </div>
+      <div class="device-actions">
+        <button class="copy-btn" id="copy-btn" onclick="copyTable()">Copy TSV</button>
+        <button class="back-btn" id="back-btn">← Back</button>
+      </div>
+    </div>
+    <div class="table-filter">
+      <input type="text" id="table-filter-input" placeholder="Filter by parameter name, CC number, notes…" autocomplete="off"/>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>Parameter</th><th>CC</th><th>NRPN</th>
+          <th>Range</th><th>Usage</th><th>Notes</th>
+        </tr></thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+    <div class="row-count" id="row-count"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="page-footer">
+  Data: <a href="https://github.com/pencilresearch/midi" target="_blank">pencilresearch/midi</a> (CC-BY-SA 4.0) ·
+  <a href="https://github.com/jdaehler/abletonliveextensions/releases/tag/midi-device-lookup" target="_blank">Ableton Extension</a> ·
+  Made by <a href="https://youtube.com/@WireDrifter" target="_blank">ARPMAN / WireDrifter</a>
+</div>
+</body>
+</html>
