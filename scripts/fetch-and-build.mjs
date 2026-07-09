@@ -5,92 +5,54 @@ import { dirname, join } from "node:path";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
-const CSV_COLS = [
-  "section","parameter_name","parameter_description",
-  "cc_msb","cc_lsb","cc_min_value","cc_max_value",
-  "nrpn_msb","nrpn_lsb","nrpn_min_value","nrpn_max_value",
-  "usage","notes"
-];
+const API_URL = "https://api.midi.guide/v4/dump/";
 
-function parseCsvCompact(text) {
-  const rows = [], row = [];
-  let field = "", inQ = false;
-  let cur = [];
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i];
-    if (inQ) {
-      if (c === '"') { if (text[i+1] === '"') { field += '"'; i++; } else inQ = false; }
-      else field += c;
-    } else {
-      if (c === '"') inQ = true;
-      else if (c === ',') { cur.push(field); field = ""; }
-      else if (c === '\r') {}
-      else if (c === '\n') { cur.push(field); rows.push(cur); cur = []; field = ""; }
-      else field += c;
+function toCompact(dump) {
+  const manufacturers = [];
+  for (const mfr of Object.values(dump.manufacturers || {})) {
+    const devices = [];
+    for (const dev of Object.values(mfr.devices || {})) {
+      const params = [];
+      for (const [section, sectionParams] of Object.entries(dev.ccs || {})) {
+        for (const p of sectionParams) {
+          const arr = [
+            section,
+            p.parameter_name || "",
+            p.parameter_description || "",
+            p.cc_msb  != null ? String(p.cc_msb)  : "",
+            p.cc_lsb  != null ? String(p.cc_lsb)  : "",
+            p.cc_min_value  != null ? String(p.cc_min_value)  : "",
+            p.cc_max_value  != null ? String(p.cc_max_value)  : "",
+            p.nrpn_msb != null ? String(p.nrpn_msb) : "",
+            p.nrpn_lsb != null ? String(p.nrpn_lsb) : "",
+            p.nrpn_min_value != null ? String(p.nrpn_min_value) : "",
+            p.nrpn_max_value != null ? String(p.nrpn_max_value) : "",
+            p.usage  || "",
+            p.notes  || "",
+          ];
+          let end = arr.length - 1;
+          while (end > 0 && arr[end] === "") end--;
+          params.push(arr.slice(0, end + 1));
+        }
+      }
+      if (params.length > 0) {
+        devices.push({ name: dev.metadata.device, params });
+      }
+    }
+    if (devices.length > 0) {
+      manufacturers.push({ name: mfr.name, devices });
     }
   }
-  if (field || cur.length) { cur.push(field); rows.push(cur); }
-  const filtered = rows.filter(r => !(r.length === 1 && r[0] === ""));
-  if (filtered.length < 2) return [];
-  const header = filtered[0].map(h => h.trim().toLowerCase());
-  const idxs = CSV_COLS.map(k => header.indexOf(k));
-  return filtered.slice(1).map(r => {
-    const arr = idxs.map(i => i >= 0 ? (r[i] || "").trim() : "");
-    let end = arr.length - 1;
-    while (end > 0 && arr[end] === "") end--;
-    return arr.slice(0, end + 1);
-  }).filter(a => a.some(v => v));
+  manufacturers.sort((a, b) => a.name.localeCompare(b.name));
+  return manufacturers;
 }
 
-async function fetchJson(url) {
-  const res = await fetch(url, { headers: { "User-Agent": "midi-device-lookup-web/1.0" } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
-  return res.json();
-}
+console.log("Fetching from midi.guide API…");
+const res = await fetch(API_URL, { headers: { "User-Agent": "midi-device-lookup-web/1.0" } });
+if (!res.ok) throw new Error(`HTTP ${res.status}: ${API_URL}`);
+const dump = await res.json();
 
-async function fetchText(url) {
-  const res = await fetch(url, { headers: { "User-Agent": "midi-device-lookup-web/1.0" } });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
-  return res.text();
-}
-
-console.log("Fetching device list from GitHub…");
-const tree = await fetchJson("https://api.github.com/repos/pencilresearch/midi/git/trees/main?recursive=1");
-const csvFiles = (tree.tree || []).filter(f =>
-  f.type === "blob" && f.path.endsWith(".csv") &&
-  !f.path.startsWith(".github/") && f.path !== "template.csv" &&
-  f.path.split("/").length === 2
-);
-
-console.log(`Found ${csvFiles.length} device files. Downloading…`);
-
-const mfrMap = {};
-let done = 0;
-const BATCH = 10;
-for (let i = 0; i < csvFiles.length; i += BATCH) {
-  await Promise.all(csvFiles.slice(i, i + BATCH).map(async file => {
-    const parts = file.path.split("/");
-    const mfr = parts[0];
-    const dev = parts[1].replace(/\.csv$/i, "");
-    try {
-      const text = await fetchText(
-        "https://raw.githubusercontent.com/pencilresearch/midi/main/" +
-        parts.map(encodeURIComponent).join("/")
-      );
-      const params = parseCsvCompact(text);
-      if (params.length > 0) {
-        if (!mfrMap[mfr]) mfrMap[mfr] = { name: mfr, devices: [] };
-        mfrMap[mfr].devices.push({ name: dev, params });
-      }
-    } catch (e) {
-      console.warn(`  skip ${file.path}: ${e.message}`);
-    }
-    process.stdout.write(`\r  ${++done}/${csvFiles.length}`);
-  }));
-}
-console.log("");
-
-const manufacturers = Object.values(mfrMap).sort((a, b) => a.name.localeCompare(b.name));
+const manufacturers = toCompact(dump);
 const totalDevices = manufacturers.reduce((n, m) => n + m.devices.length, 0);
 const fetched = new Date().toISOString();
 
