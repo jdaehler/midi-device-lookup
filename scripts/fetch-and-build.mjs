@@ -68,7 +68,7 @@ const template = readFileSync(join(root, "src/template.html"), "utf8");
 const html = template
   .replace("__DEVICE_DATA__", JSON.stringify(data))
   .replace("__SUBTITLE__", subtitle)
-  .replace("__VERSION__", version);
+  .replaceAll("__VERSION__", version);
 
 writeFileSync(join(root, "index.html"), html, "utf8");
 console.log(`Written: index.html (${(html.length / 1024 / 1024).toFixed(1)} MB)`);
