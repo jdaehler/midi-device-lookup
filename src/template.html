@@ -301,6 +301,7 @@ var allDevices = [];
 });
 var currentParams = [];
 var currentSection = null;
+var nrpnFilterActive = false;
 
 var HIST_KEY = "mdl-history";
 var searchHistory = [];
@@ -361,9 +362,11 @@ function renderChips() {
     rc.className = "chip chip-nrpn";
     rc.textContent = "NRPN (" + nrpnCount + ")";
     rc.addEventListener("click", function() {
+      nrpnFilterActive = !nrpnFilterActive;
+      rc.classList.toggle("active", nrpnFilterActive);
       document.getElementById("search-input").value = "";
       document.getElementById("clear-btn").style.display = "none";
-      renderNrpn();
+      if (nrpnFilterActive) { renderNrpn(); } else { renderResults(""); }
     });
     bar.appendChild(rc);
   }
@@ -589,6 +592,11 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("search-input").addEventListener("input", function(e) {
     var val = e.target.value;
     document.getElementById("clear-btn").style.display = val ? "block" : "none";
+    if (nrpnFilterActive) {
+      nrpnFilterActive = false;
+      var nc = document.querySelector(".chip-nrpn");
+      if (nc) nc.classList.remove("active");
+    }
     renderResults(val);
   });
   document.getElementById("table-filter-input").addEventListener("input", function(e) {
