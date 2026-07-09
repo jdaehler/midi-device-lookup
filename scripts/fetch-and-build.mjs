@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
 const API_URL = "https://api.midi.guide/v4/dump/";
+const VERSION = "1.0.16";
 
 function toCompact(dump) {
   const manufacturers = [];
@@ -61,7 +62,7 @@ console.log(`Built: ${totalDevices} devices across ${manufacturers.length} manuf
 const data = { fetched, manufacturers };
 const d = new Date(fetched);
 const dateStr = d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
-const version = `v${d.getUTCFullYear()}.${String(d.getUTCMonth()+1).padStart(2,"0")}.${String(d.getUTCDate()).padStart(2,"0")}`;
+const version = `v${VERSION}`;
 const subtitle = `${totalDevices} devices · ${manufacturers.length} manufacturers · Updated ${dateStr}`;
 
 const template = readFileSync(join(root, "src/template.html"), "utf8");
