@@ -19,24 +19,29 @@ async function shot(name, setup) {
   console.log("saved:", name);
 }
 
-// Dark mode — list view
+// Dark mode — list with NRPN filter active (shows NRPN + params badges)
 await shot("dark-list.png", async () => {
-  await page.evaluate(() => document.documentElement.setAttribute("data-theme","dark"));
+  await page.evaluate(() => {
+    document.documentElement.setAttribute("data-theme","dark");
+    const chips = document.querySelectorAll(".chip-nrpn");
+    if (chips.length) chips[0].click();
+  });
+  await new Promise(r => setTimeout(r, 200));
 });
 
-// Dark mode — device detail (Dirty Mirror / Animal Factory)
+// Dark mode — device detail with section chips (Prophet Rev2 has NRPN + multiple sections)
 await shot("dark-detail.png", async () => {
   await page.evaluate(() => {
     document.documentElement.setAttribute("data-theme","dark");
     const items = document.querySelectorAll(".result-item");
     for (const i of items) {
-      if (i.querySelector(".device")?.textContent.includes("Dirty Mirror")) { i.click(); break; }
+      if (i.querySelector(".device")?.textContent.includes("Prophet Rev2")) { i.click(); break; }
     }
   });
   await new Promise(r => setTimeout(r, 200));
 });
 
-// Light mode — list view
+// Light mode — normal list view
 await shot("light-list.png", async () => {
   await page.evaluate(() => document.documentElement.setAttribute("data-theme","light"));
 });
@@ -47,7 +52,7 @@ await shot("light-detail.png", async () => {
     document.documentElement.setAttribute("data-theme","light");
     const items = document.querySelectorAll(".result-item");
     for (const i of items) {
-      if (i.querySelector(".device")?.textContent.includes("Dirty Mirror")) { i.click(); break; }
+      if (i.querySelector(".device")?.textContent.includes("Prophet Rev2")) { i.click(); break; }
     }
   });
   await new Promise(r => setTimeout(r, 200));
