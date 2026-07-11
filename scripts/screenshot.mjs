@@ -19,12 +19,17 @@ async function shot(name, setup) {
   console.log("saved:", name);
 }
 
-// Dark mode — list with NRPN filter active (shows NRPN + params badges)
+// Dark mode — NRPN filter active + "Korg" search (shows combined filter)
 await shot("dark-list.png", async () => {
   await page.evaluate(() => {
     document.documentElement.setAttribute("data-theme","dark");
     const chips = document.querySelectorAll(".chip-nrpn");
     if (chips.length) chips[0].click();
+    const inp = document.getElementById("search-input");
+    if (inp) {
+      inp.value = "Korg";
+      inp.dispatchEvent(new Event("input"));
+    }
   });
   await new Promise(r => setTimeout(r, 200));
 });

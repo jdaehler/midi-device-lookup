@@ -6,7 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 
 const API_URL = "https://api.midi.guide/v4/dump/";
-const VERSION = "1.0.17";
+const VERSION = "1.0.18";
 
 function toCompact(dump) {
   const manufacturers = [];
