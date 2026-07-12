@@ -447,7 +447,22 @@ function renderChips() {
   searchHistory.forEach(function(h) {
     var chip = document.createElement("span");
     chip.className = "chip";
-    chip.textContent = h;
+    chip.style.cssText = "display:inline-flex;align-items:center;gap:4px;";
+    var label = document.createElement("span");
+    label.textContent = h;
+    var del = document.createElement("span");
+    del.textContent = "×";
+    del.style.cssText = "color:var(--text-faint);font-size:11px;line-height:1;cursor:pointer;";
+    del.addEventListener("mouseenter", function(){ del.style.color="var(--text)"; });
+    del.addEventListener("mouseleave", function(){ del.style.color="var(--text-faint)"; });
+    del.addEventListener("click", function(e) {
+      e.stopPropagation();
+      searchHistory = searchHistory.filter(function(x){ return x !== h; });
+      try { localStorage.setItem(HIST_KEY, JSON.stringify(searchHistory)); } catch(e2) {}
+      renderChips();
+    });
+    chip.appendChild(label);
+    chip.appendChild(del);
     chip.addEventListener("click", function() {
       var inp = document.getElementById("search-input");
       inp.value = h;

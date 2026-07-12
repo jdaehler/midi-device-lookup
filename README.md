@@ -59,6 +59,9 @@ Requires Node.js 18+. Fetches ~400 CSV files from GitHub and writes `index.html`
 
 ## What's New
 
+**v1.0.23**
+- Search history chips: click × to remove individual entries
+
 **v1.0.22**
 - Favorites — star any device to save it; ★ chip filters to favorites only (localStorage)
 - Fix: X button now visible when selecting a search history chip
