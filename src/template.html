@@ -141,15 +141,16 @@ body {
 /* ── Result list ── */
 .result-list { border-top: 1px solid var(--border-mid); }
 .result-item {
-  display: flex; justify-content: space-between; align-items: center;
+  display: flex; align-items: center;
   padding: 8px 4px; border-bottom: 1px solid var(--row-border); cursor: pointer;
 }
 .result-item:hover { background: var(--row-hover); }
+.result-item > span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .result-item .manufacturer { color: var(--blue); font-weight: 600; margin-right: 6px; }
 .result-item .device { color: var(--text-bright); }
-.result-item .count { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
-.result-item .col-nrpn { width: 52px; display: flex; justify-content: flex-end; }
-.result-item .col-count { width: 84px; display: flex; justify-content: flex-end; }
+.result-item .count { display: flex; align-items: center; flex-shrink: 0; }
+.result-item .col-nrpn { width: 56px; display: flex; justify-content: flex-end; padding-right: 6px; }
+.result-item .col-count { width: 86px; display: flex; justify-content: flex-end; }
 .mfr-header { color: var(--blue); background: var(--mfr-bg); font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; padding: 6px 8px; border-bottom: 1px solid var(--mfr-border); }
 .badge-new { display: inline-block; font-size: 9px; font-weight: 700; color: var(--green); border: 1px solid; border-color: color-mix(in srgb, var(--green) 40%, transparent); border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: middle; }
 .badge-nrpn { display: inline-block; font-size: 11px; font-weight: 700; color: var(--purple); border: 1px solid; border-color: color-mix(in srgb, var(--purple) 40%, transparent); border-radius: 3px; padding: 1px 5px; vertical-align: middle; }
