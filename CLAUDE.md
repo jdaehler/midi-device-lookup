@@ -7,6 +7,20 @@ Published at: **https://jdaehler.github.io/midi-device-lookup/**
 
 This is the **primary/canonical** implementation. The Ableton extension (`/Users/jd/Cowork/AbletonExtensions/midi-device-lookup/`) is derivative — always implement here first, then port.
 
+## Release workflow (always in this order)
+
+1. Implement feature in web version (`src/template.html`)
+2. Build: `node scripts/fetch-and-build.mjs`
+3. **Test locally** — open `index.html` in browser, verify the feature works
+4. Get user approval before publishing
+5. Take screenshots, create release backup (`releases/vX.Y.Z/`)
+6. Publish to GitHub Pages, push to git
+7. **Then port to Ableton** (`/Users/jd/Cowork/AbletonExtensions/midi-device-lookup/src/extension.ts`)
+8. Build Ableton extension: `npm run package` (bumps version)
+9. **Test in Ableton Live** — install locally, open dialog, verify feature works
+10. Get user approval before publishing
+11. Create Ableton release backup, upload .ablx to GitHub Release, update versions.json
+
 ---
 
 ## Project structure
