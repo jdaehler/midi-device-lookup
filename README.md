@@ -18,6 +18,7 @@ Browse CC and NRPN parameters for 400+ hardware MIDI devices — directly in you
 - Click any parameter row to copy its CC or NRPN number to the clipboard
 - Export parameters as CSV or JSON — download for any device
 - Copy TSV button exports the full (or filtered) parameter list — paste into Excel or Numbers
+- Favorites — star any device, filter to favorites with the ★ chip (stored in browser)
 - Search history saved in your browser (last 8 searches)
 
 ## Data
@@ -57,6 +58,11 @@ Requires Node.js 18+. Fetches ~400 CSV files from GitHub and writes `index.html`
 ---
 
 ## What's New
+
+**v1.0.22**
+- Favorites — star any device to save it; ★ chip filters to favorites only (localStorage)
+- Fix: X button now visible when selecting a search history chip
+- Fix: result rows right-aligned with fixed column widths (NRPN badge, params count, star)
 
 **v1.0.19**
 - Export parameters as CSV or JSON — download button in device detail view
