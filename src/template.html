@@ -152,8 +152,9 @@ body {
 .badge-new { display: inline-block; font-size: 9px; font-weight: 700; color: var(--green); border: 1px solid; border-color: color-mix(in srgb, var(--green) 40%, transparent); border-radius: 3px; padding: 0 3px; margin-right: 5px; vertical-align: middle; }
 .badge-nrpn { display: inline-block; font-size: 11px; font-weight: 700; color: var(--purple); border: 1px solid; border-color: color-mix(in srgb, var(--purple) 40%, transparent); border-radius: 3px; padding: 1px 5px; margin-right: 6px; vertical-align: middle; }
 .badge-count { display: inline-block; font-size: 11px; font-weight: 700; color: var(--green); border: 1px solid; border-color: color-mix(in srgb, var(--green) 40%, transparent); border-radius: 3px; padding: 1px 5px; vertical-align: middle; }
-.chip-nrpn { color: var(--purple) !important; border-color: color-mix(in srgb, var(--purple) 40%, transparent) !important; }
-.chip-nrpn:hover { border-color: var(--purple) !important; }
+.chip-nrpn { color: color-mix(in srgb, var(--purple) 70%, var(--text-faint)) !important; border-color: color-mix(in srgb, var(--purple) 30%, transparent) !important; }
+.chip-nrpn:hover { color: var(--purple) !important; border-color: color-mix(in srgb, var(--purple) 60%, transparent) !important; }
+.chip-nrpn.active { color: var(--purple) !important; border-color: var(--purple) !important; background: color-mix(in srgb, var(--purple) 12%, transparent) !important; font-weight: 700; }
 
 /* ── Device view ── */
 .device-view { display: none; flex-direction: column; gap: 10px; }
@@ -208,6 +209,43 @@ tbody tr { cursor: pointer; }
 .chip-sec:hover { color: var(--blue); border-color: var(--blue); }
 .chip-sec.active { color: var(--blue); border-color: var(--blue); background: var(--mfr-bg); }
 
+/* ── Export modal ── */
+.export-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; z-index: 100;
+}
+.export-modal {
+  background: var(--bg-raised); border: 1px solid var(--border);
+  border-radius: 10px; padding: 24px; width: 360px; max-width: 90vw;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.export-modal-title { font-size: 16px; font-weight: 700; color: var(--text-bright); }
+.export-section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); margin-bottom: -8px; }
+.export-fmt-row { display: flex; gap: 8px; }
+.export-fmt {
+  flex: 1; padding: 8px; background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text-dim); cursor: pointer; font-size: 14px; font-weight: 600;
+  transition: all 0.1s;
+}
+.export-fmt.active { background: color-mix(in srgb, var(--blue) 12%, transparent); border-color: var(--blue); color: var(--blue); }
+.export-device-item {
+  background: var(--bg-sunken); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 12px; font-size: 13px; color: var(--text);
+}
+.export-device-mfr { color: var(--blue); font-weight: 600; }
+.export-devices-hint { font-size: 11px; color: var(--text-faint); }
+.export-modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.export-cancel {
+  background: var(--bg-sunken); color: var(--text-dim); border: 1px solid var(--border);
+  border-radius: 6px; padding: 7px 16px; cursor: pointer; font-size: 14px;
+}
+.export-cancel:hover { color: var(--text); }
+.export-download {
+  background: var(--blue); color: #fff; border: none;
+  border-radius: 6px; padding: 7px 20px; cursor: pointer; font-size: 14px; font-weight: 600;
+}
+.export-download:hover { opacity: 0.85; }
+
 /* ── Toast ── */
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--toast-bg); color: var(--toast-text); border: 1px solid var(--toast-border); border-radius: 6px; padding: 6px 16px; font-size: 12px; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
 .toast.show { opacity: 1; }
@@ -258,6 +296,7 @@ tbody tr { cursor: pointer; }
       <div class="device-actions">
         <a class="source-btn" id="source-btn" target="_blank" rel="noopener">CSV ↗</a>
         <button class="copy-btn" id="copy-btn" onclick="copyTable()">Copy TSV</button>
+        <button class="copy-btn" id="export-btn" onclick="showExport()">Export…</button>
         <button class="back-btn" id="back-btn">← Back</button>
       </div>
     </div>
@@ -281,6 +320,24 @@ tbody tr { cursor: pointer; }
 
 <div class="toast" id="toast"></div>
 
+<div class="export-overlay hidden" id="export-overlay">
+  <div class="export-modal">
+    <div class="export-modal-title">Export Parameters</div>
+    <div class="export-section-label">Format</div>
+    <div class="export-fmt-row">
+      <button class="export-fmt active" data-fmt="csv" onclick="selectFmt(this)">CSV</button>
+      <button class="export-fmt" data-fmt="json" onclick="selectFmt(this)">JSON</button>
+    </div>
+    <div class="export-section-label">Devices</div>
+    <div class="export-device-item"><span class="export-device-mfr" id="export-device-mfr"></span> <span id="export-device-name"></span></div>
+    <div class="export-devices-hint">Multi-device export coming soon</div>
+    <div class="export-modal-footer">
+      <button class="export-cancel" onclick="closeExport()">Cancel</button>
+      <button class="export-download" onclick="doExport()">Download</button>
+    </div>
+  </div>
+</div>
+
 <div class="page-footer">
   Data: <a href="https://midi.guide" target="_blank">MIDI Guide</a> (CC-BY-SA 4.0) ·
   <a href="https://github.com/jdaehler/abletonliveextensions/releases/tag/midi-device-lookup" target="_blank">Ableton Extension</a> ·
@@ -300,8 +357,10 @@ var allDevices = [];
   });
 });
 var currentParams = [];
+var currentDevice = null;
 var currentSection = null;
 var nrpnFilterActive = false;
+var exportFormat = "csv";
 
 var HIST_KEY = "mdl-history";
 var searchHistory = [];
@@ -330,27 +389,6 @@ function saveHistory(q) {
   renderChips();
 }
 
-function renderNrpn() {
-  var list = document.getElementById("result-list");
-  list.innerHTML = "";
-  var nrpnDevices = allDevices.filter(function(d) { return d.hasNrpn; });
-  setStatus(nrpnDevices.length + " device" + (nrpnDevices.length !== 1 ? "s" : "") + " with NRPN parameters", false);
-  var lastMfr = null;
-  nrpnDevices.forEach(function(d) {
-    if (d.manufacturer !== lastMfr) {
-      lastMfr = d.manufacturer;
-      var hdr = document.createElement("div");
-      hdr.className = "mfr-header";
-      hdr.textContent = d.manufacturer;
-      list.appendChild(hdr);
-    }
-    var item = document.createElement("div");
-    item.className = "result-item";
-    item.innerHTML = '<span>'+(d.isNew?'<span class="badge-new">NEW</span>':'')+'<span class="device">'+esc(d.device)+'</span></span><span class="count"><span class="badge-nrpn">NRPN</span><span class="badge-count">'+d.params.length+' params</span></span>';
-    item.addEventListener("click", function(){showDevice(d);});
-    list.appendChild(item);
-  });
-}
 
 function renderChips() {
   var bar = document.getElementById("chips-bar");
@@ -361,12 +399,11 @@ function renderChips() {
     var rc = document.createElement("span");
     rc.className = "chip chip-nrpn";
     rc.textContent = "NRPN (" + nrpnCount + ")";
+    rc.classList.toggle("active", nrpnFilterActive);
     rc.addEventListener("click", function() {
       nrpnFilterActive = !nrpnFilterActive;
       rc.classList.toggle("active", nrpnFilterActive);
-      document.getElementById("search-input").value = "";
-      document.getElementById("clear-btn").style.display = "none";
-      if (nrpnFilterActive) { renderNrpn(); } else { renderResults(""); }
+      renderResults(document.getElementById("search-input").value);
     });
     bar.appendChild(rc);
   }
@@ -410,10 +447,12 @@ function renderResults(query) {
   var list = document.getElementById("result-list");
   list.innerHTML = "";
 
+  var pool = nrpnFilterActive ? allDevices.filter(function(d){return d.hasNrpn;}) : allDevices;
+
   if (!query) {
-    setStatus(allDevices.length+" devices", false);
+    setStatus(pool.length+" device"+(pool.length!==1?"s":"")+(nrpnFilterActive?" with NRPN":""), false);
     var lastMfr = null;
-    allDevices.forEach(function(d) {
+    pool.forEach(function(d) {
       if (d.manufacturer !== lastMfr) {
         lastMfr = d.manufacturer;
         var hdr = document.createElement("div");
@@ -431,7 +470,7 @@ function renderResults(query) {
   }
 
   var terms = query.toLowerCase().split(/\s+/).filter(function(t){return t.length>0;});
-  var matches = allDevices.filter(function(d) {
+  var matches = pool.filter(function(d) {
     var hay = (d.manufacturer+" "+d.device).toLowerCase();
     return terms.every(function(t){return hay.indexOf(t)!==-1;});
   });
@@ -466,6 +505,7 @@ function renderResults(query) {
 
 function showDevice(d) {
   currentParams = d.params;
+  currentDevice = d;
   currentSection = null;
   document.getElementById("result-view").classList.add("hidden");
   document.getElementById("device-view").classList.add("active");
@@ -585,6 +625,76 @@ function copyTable() {
   });
 }
 
+function showExport() {
+  document.getElementById("export-device-mfr").textContent = currentDevice.manufacturer;
+  document.getElementById("export-device-name").textContent = currentDevice.device;
+  document.getElementById("export-overlay").classList.remove("hidden");
+}
+function closeExport() {
+  document.getElementById("export-overlay").classList.add("hidden");
+}
+function selectFmt(btn) {
+  document.querySelectorAll(".export-fmt").forEach(function(b){ b.classList.remove("active"); });
+  btn.classList.add("active");
+  exportFormat = btn.getAttribute("data-fmt");
+}
+function doExport() {
+  if (!currentDevice) return;
+  if (exportFormat === "csv") exportCsv([currentDevice]);
+  else exportJson([currentDevice]);
+  closeExport();
+}
+function csvCell(v) {
+  v = String(v == null ? "" : v);
+  if (v.indexOf(",") !== -1 || v.indexOf('"') !== -1 || v.indexOf("\n") !== -1)
+    return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+function downloadFile(content, filename, type) {
+  var blob = new Blob([content], { type: type });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function exportCsv(devices) {
+  var lines = [["Manufacturer","Device","Section","Parameter","Description","CC","NRPN","Range Min","Range Max","Usage","Notes"].join(",")];
+  devices.forEach(function(d) {
+    d.params.forEach(function(p) {
+      var cc = (p[F.CMB]||"") + (p[F.CLB] ? "/"+p[F.CLB] : "");
+      var nrpn = (p[F.NMB]||"") + (p[F.NLB] ? "."+p[F.NLB] : "");
+      var rmin = p[F.CMB]&&p[F.CMIN] ? p[F.CMIN] : p[F.NMB]&&p[F.NMIN] ? p[F.NMIN] : "";
+      var rmax = p[F.CMB]&&p[F.CMAX] ? p[F.CMAX] : p[F.NMB]&&p[F.NMAX] ? p[F.NMAX] : "";
+      lines.push([d.manufacturer, d.device, p[F.SEC]||"", p[F.NAME]||"", p[F.DESC]||"", cc, nrpn, rmin, rmax, p[F.USE]||"", p[F.NOT]||""].map(csvCell).join(","));
+    });
+  });
+  var name = devices.length === 1 ? devices[0].device.replace(/[^a-z0-9]+/gi, "-").toLowerCase() : "midi-params";
+  downloadFile(lines.join("\n"), name + ".csv", "text/csv");
+}
+function exportJson(devices) {
+  var out = devices.map(function(d) {
+    return {
+      manufacturer: d.manufacturer,
+      device: d.device,
+      params: d.params.map(function(p) {
+        var obj = { section: p[F.SEC]||"", name: p[F.NAME]||"" };
+        if (p[F.DESC]) obj.description = p[F.DESC];
+        if (p[F.CMB]) { obj.cc = p[F.CMB]; if (p[F.CLB]) obj.cc_lsb = p[F.CLB]; }
+        if (p[F.NMB]) { obj.nrpn = p[F.NMB]; if (p[F.NLB]) obj.nrpn_lsb = p[F.NLB]; }
+        var rmin = p[F.CMB]&&p[F.CMIN] ? p[F.CMIN] : p[F.NMB]&&p[F.NMIN] ? p[F.NMIN] : null;
+        var rmax = p[F.CMB]&&p[F.CMAX] ? p[F.CMAX] : p[F.NMB]&&p[F.NMAX] ? p[F.NMAX] : null;
+        if (rmin !== null) obj.range_min = rmin;
+        if (rmax !== null) obj.range_max = rmax;
+        if (p[F.USE]) obj.usage = p[F.USE];
+        if (p[F.NOT]) obj.notes = p[F.NOT];
+        return obj;
+      })
+    };
+  });
+  var name = devices.length === 1 ? devices[0].device.replace(/[^a-z0-9]+/gi, "-").toLowerCase() : "midi-params";
+  downloadFile(JSON.stringify(out.length === 1 ? out[0] : out, null, 2), name + ".json", "application/json");
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   var theme = document.documentElement.getAttribute("data-theme");
   document.getElementById("theme-btn").textContent = theme === "dark" ? "🌙" : "☀️";
@@ -592,11 +702,6 @@ document.addEventListener("DOMContentLoaded", function() {
   document.getElementById("search-input").addEventListener("input", function(e) {
     var val = e.target.value;
     document.getElementById("clear-btn").style.display = val ? "block" : "none";
-    if (nrpnFilterActive) {
-      nrpnFilterActive = false;
-      var nc = document.querySelector(".chip-nrpn");
-      if (nc) nc.classList.remove("active");
-    }
     renderResults(val);
   });
   document.getElementById("table-filter-input").addEventListener("input", function(e) {
@@ -604,7 +709,13 @@ document.addEventListener("DOMContentLoaded", function() {
   });
   document.getElementById("back-btn").addEventListener("click", backToSearch);
   document.addEventListener("keydown", function(e) {
-    if (e.key==="Escape" && document.getElementById("device-view").classList.contains("active")) backToSearch();
+    if (e.key === "Escape") {
+      if (!document.getElementById("export-overlay").classList.contains("hidden")) { closeExport(); return; }
+      if (document.getElementById("device-view").classList.contains("active")) backToSearch();
+    }
+  });
+  document.getElementById("export-overlay").addEventListener("click", function(e) {
+    if (e.target === this) closeExport();
   });
   renderChips();
   renderResults("");
