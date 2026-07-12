@@ -155,6 +155,11 @@ body {
 .chip-nrpn { color: color-mix(in srgb, var(--purple) 70%, var(--text-faint)) !important; border-color: color-mix(in srgb, var(--purple) 30%, transparent) !important; }
 .chip-nrpn:hover { color: var(--purple) !important; border-color: color-mix(in srgb, var(--purple) 60%, transparent) !important; }
 .chip-nrpn.active { color: var(--purple) !important; border-color: var(--purple) !important; background: color-mix(in srgb, var(--purple) 12%, transparent) !important; font-weight: 700; }
+.chip-fav { color: color-mix(in srgb, #e8a020 70%, var(--text-faint)) !important; border-color: color-mix(in srgb, #e8a020 30%, transparent) !important; }
+.chip-fav:hover { color: #e8a020 !important; border-color: color-mix(in srgb, #e8a020 60%, transparent) !important; }
+.chip-fav.active { color: #e8a020 !important; border-color: #e8a020 !important; background: color-mix(in srgb, #e8a020 12%, transparent) !important; font-weight: 700; }
+.fav-btn { background: none; border: none; cursor: pointer; font-size: 15px; color: var(--text-faint); padding: 0 2px 0 10px; flex-shrink: 0; line-height: 1; transition: color 0.1s; }
+.fav-btn:hover, .fav-btn.active { color: #e8a020; }
 
 /* ── Device view ── */
 .device-view { display: none; flex-direction: column; gap: 10px; }
@@ -366,6 +371,23 @@ var HIST_KEY = "mdl-history";
 var searchHistory = [];
 try { searchHistory = JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); } catch(e) {}
 
+var FAV_KEY = "mdl-favorites";
+var favorites = [];
+var favFilterActive = false;
+try { favorites = JSON.parse(localStorage.getItem(FAV_KEY)||"[]"); } catch(e) {}
+
+function favId(d) { return d.manufacturer + "|||" + d.device; }
+function isFav(d) { return favorites.indexOf(favId(d)) !== -1; }
+function toggleFav(d, e) {
+  e.stopPropagation();
+  var id = favId(d);
+  var idx = favorites.indexOf(id);
+  if (idx === -1) favorites.push(id); else favorites.splice(idx, 1);
+  try { localStorage.setItem(FAV_KEY, JSON.stringify(favorites)); } catch(e2) {}
+  renderChips();
+  renderResults(document.getElementById("search-input").value);
+}
+
 function clearSearch() {
   var inp = document.getElementById("search-input");
   inp.value = "";
@@ -394,6 +416,18 @@ function renderChips() {
   var bar = document.getElementById("chips-bar");
   if (!bar) return;
   bar.innerHTML = "";
+
+  var fc = document.createElement("span");
+  fc.className = "chip chip-fav" + (favFilterActive ? " active" : "");
+  fc.textContent = "★" + (favorites.length > 0 ? " (" + favorites.length + ")" : "");
+  fc.title = "Favorites";
+  fc.addEventListener("click", function() {
+    favFilterActive = !favFilterActive;
+    fc.classList.toggle("active", favFilterActive);
+    renderResults(document.getElementById("search-input").value);
+  });
+  bar.appendChild(fc);
+
   var nrpnCount = allDevices.filter(function(d){return d.hasNrpn;}).length;
   if (nrpnCount > 0) {
     var rc = document.createElement("span");
@@ -414,6 +448,7 @@ function renderChips() {
     chip.addEventListener("click", function() {
       var inp = document.getElementById("search-input");
       inp.value = h;
+      document.getElementById("clear-btn").style.display = "block";
       renderResults(h);
       inp.focus();
     });
@@ -448,9 +483,23 @@ function renderResults(query) {
   list.innerHTML = "";
 
   var pool = nrpnFilterActive ? allDevices.filter(function(d){return d.hasNrpn;}) : allDevices;
+  if (favFilterActive) pool = pool.filter(function(d){ return isFav(d); });
+
+  function addFavBtn(item, d) {
+    var btn = document.createElement("button");
+    btn.className = "fav-btn" + (isFav(d) ? " active" : "");
+    btn.title = isFav(d) ? "Remove from favorites" : "Add to favorites";
+    btn.textContent = "★";
+    btn.addEventListener("click", function(e) { toggleFav(d, e); });
+    item.appendChild(btn);
+  }
 
   if (!query) {
-    setStatus(pool.length+" device"+(pool.length!==1?"s":"")+(nrpnFilterActive?" with NRPN":""), false);
+    if (favFilterActive && pool.length === 0) {
+      setStatus("No favorites yet — click ★ on any device to add", false);
+      return;
+    }
+    setStatus(pool.length+" device"+(pool.length!==1?"s":"")+(nrpnFilterActive?" with NRPN":"")+(favFilterActive?" · favorites":""), false);
     var lastMfr = null;
     pool.forEach(function(d) {
       if (d.manufacturer !== lastMfr) {
@@ -464,6 +513,7 @@ function renderResults(query) {
       item.className = "result-item";
       item.innerHTML = '<span>'+(d.isNew?'<span class="badge-new">NEW</span>':'')+'<span class="device">'+esc(d.device)+'</span></span><span class="count">'+(d.hasNrpn?'<span class="badge-nrpn">NRPN</span>':'')+'<span class="badge-count">'+d.params.length+' params</span></span>';
       item.addEventListener("click", function(){showDevice(d);});
+      addFavBtn(item, d);
       list.appendChild(item);
     });
     return;
@@ -493,6 +543,7 @@ function renderResults(query) {
       saveHistory(query);
       showDevice(d);
     });
+    addFavBtn(item, d);
     list.appendChild(item);
   });
   if (matches.length > 300) {
