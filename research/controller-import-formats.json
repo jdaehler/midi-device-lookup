@@ -1,0 +1,134 @@
+[
+  {
+    "controller": "Novation SL MkIII",
+    "app": "Novation Components",
+    "import_supported": true,
+    "format": "SysEx (.syx) — internally JSON (community-documented)",
+    "required_fields": ["control_type", "cc", "channel"],
+    "optional_fields": ["name", "min", "max", "port"],
+    "documented": false,
+    "doc_url": "https://github.com/inno/slmkiii",
+    "notes": "Components only imports/exports SysEx (.syx) files directly. Internally the template data is JSON, and the community Python library 'slmkiii' can convert between JSON and .syx. The JSON schema is not officially documented by Novation. Fields include message type (CC/NRPN/Note/PC), channel, CC number, and per-control behavior (absolute/relative). Supports CC and NRPN. Cannot import a plain JSON file directly in the browser-based Components app — conversion to .syx is required first."
+  },
+  {
+    "controller": "Novation Launch Control XL",
+    "app": "Novation Components",
+    "import_supported": true,
+    "format": "SysEx (.syx) — proprietary binary",
+    "required_fields": ["cc", "channel"],
+    "optional_fields": ["template_name"],
+    "documented": false,
+    "doc_url": "https://support.novationmusic.com/hc/en-gb/articles/4411807214226-Launch-Control-XL-MK-1-and-2-Components-guide",
+    "notes": "Similar to SL MkIII: templates are uploaded/downloaded as SysEx (.syx) files via Novation Components. No public schema for the internal template structure. Templates can be shared as .syx files between users. Knobs and faders have fixed CC assignments that can be reconfigured per template."
+  },
+  {
+    "controller": "Arturia KeyLab / BeatStep / MiniLab (all Arturia hardware)",
+    "app": "Arturia MIDI Control Center (MCC)",
+    "import_supported": true,
+    "format": "Proprietary binary — device-specific file extension (e.g. .beatstep, .keylabessential3, .minilabmk3)",
+    "required_fields": ["cc", "channel"],
+    "optional_fields": ["name", "min", "max", "behavior"],
+    "documented": false,
+    "doc_url": "https://support.arturia.com/hc/en-us/articles/6104313005340-MIDI-Control-Center-MCC-General-Questions",
+    "notes": "MCC supports Import/Export of template files. Each device type has its own proprietary file extension (e.g. .beatstep for BeatStep, .keylabessential3 for KeyLab Essential Mk3). The format is proprietary binary — not XML or JSON. The file is not human-readable and cannot be hand-crafted from a CC map. Files are device-type-specific and not interchangeable across different Arturia products. No reverse-engineering documentation found. Not a viable external import target."
+  },
+  {
+    "controller": "Akai MPC / MPC Beats / MPC 2",
+    "app": "MPC Software / MPC Beats",
+    "import_supported": true,
+    "format": ".xmm (XML-based, not fully documented publicly)",
+    "required_fields": ["midi_message", "parameter"],
+    "optional_fields": ["channel", "cc"],
+    "documented": false,
+    "doc_url": "https://support.akaipro.com/en/support/solutions/articles/69000817918-akai-pro-mpc-beats-mpc-2-creating-exporting-and-importing-new-midi-maps",
+    "notes": "MPC Beats and MPC 2 support exporting and importing MIDI maps as .xmm files (eXtensible MIDI Map — likely XML-based given the extension). The .xmm file maps MIDI messages to software parameters (DAW-style MIDI learn, not hardware controller CC configuration). This is about mapping an input controller to MPC controls, not mapping knobs on the MPC to output CC numbers. Not a direct target for our synth parameter export. No public schema documentation found."
+  },
+  {
+    "controller": "Melbourne Instruments Roto-Control",
+    "app": "Roto-Setup App",
+    "import_supported": true,
+    "format": "JSON (.json)",
+    "required_fields": ["cc", "channel", "mode"],
+    "optional_fields": ["name", "nrpn", "label", "color", "haptics"],
+    "documented": false,
+    "doc_url": "https://www.melbourneinstruments.com/roto",
+    "notes": "MIDI and Plugin Setups are exported and imported as .json files via File > Import/Export in the Roto-Setup App. Each knob/button can be assigned a MIDI channel, CC number, or NRPN. Also supports labeling, colors, haptics, and toggle behavior. The JSON schema is not publicly documented, but the format is confirmed as JSON. This is a realistic import target if we can discover the schema by examining exported files. Motorized faders mean feedback (receiving CC to move the motor) is also part of the setup."
+  },
+  {
+    "controller": "OXI One / OXI One Mk2",
+    "app": "OXI App",
+    "import_supported": true,
+    "format": "JSON (.oxiindef) or CSV (midi.guide format)",
+    "required_fields": ["instrument_name", "parameters"],
+    "optional_fields": ["abbreviated_name", "type"],
+    "documented": true,
+    "doc_url": "https://midi.guide/blog/adding-oxi-instrument-definition-support/",
+    "notes": "The OXI App supports two import formats: (1) .oxiindef — a JSON format defining an 'instrument definition' with abbreviated instrument name, abbreviated parameter names, and parameter types (CC7, CC14, NRPN). (2) CSV in midi.guide format, which is directly importable into the OXI App. The .oxiindef format maps to the OXI One UI: 8-char instrument name, short parameter names, type annotations. midi.guide can export to both formats. The CSV format from midi.guide includes columns for CC/NRPN number, usage description, and notes. This is an excellent direct export target — midi.guide already exports to OXI format, and our tool could do the same."
+  },
+  {
+    "controller": "Behringer X-TOUCH / X-TOUCH Mini / X-TOUCH Compact",
+    "app": "X-Touch Editor (Windows only)",
+    "import_supported": true,
+    "format": "Proprietary binary (.bin)",
+    "required_fields": ["cc", "channel"],
+    "optional_fields": [],
+    "documented": false,
+    "doc_url": "https://github.com/AndreasPantle/X-Touch-Mini-HandsOn",
+    "notes": "The X-Touch Editor uses .bin preset files that are loaded and dumped to the hardware. Communication uses SysEx messages. The binary format has been partially reverse-engineered by the community (USB traffic sniffing via Wireshark). Behringer has not published the protocol. The editor is Windows-only. Not a viable target for external import — format is opaque binary and not intended to be hand-crafted."
+  },
+  {
+    "controller": "Native Instruments Komplete Kontrol (S-Series, A-Series, M32)",
+    "app": "Komplete Kontrol Software / Controller Editor",
+    "import_supported": false,
+    "format": null,
+    "required_fields": null,
+    "optional_fields": null,
+    "documented": false,
+    "doc_url": "https://support.native-instruments.com/hc/en-us/articles/360001144229",
+    "notes": "MIDI templates are stored in a single monolithic settings file ('Komplete Kontrol MK2 Settings.dat'). Individual templates cannot be exported or imported — they are only managed inside the MIDI Assignment Editor within the software. No file-based import mechanism exists. Not a viable export target."
+  },
+  {
+    "controller": "SSL UF8 / UF1",
+    "app": "SSL 360°",
+    "import_supported": false,
+    "format": null,
+    "required_fields": null,
+    "optional_fields": null,
+    "documented": false,
+    "doc_url": "https://www.solidstatelogic.com/products/uf8",
+    "notes": "The UF8 has a configurable MIDI CC Layer for controlling synths and sample libraries. CC assignments are configured entirely through the SSL 360° software GUI — no file import/export mechanism for CC mappings was found in documentation or community discussions. SSL has published a recommended Spitfire Audio mapping as a PDF reference document, but this is a visual guide, not an importable file. Not a viable export target."
+  },
+  {
+    "controller": "Faderfox (EC4, PC4, UC4, LV1, etc.)",
+    "app": "No companion software",
+    "import_supported": false,
+    "format": null,
+    "required_fields": null,
+    "optional_fields": null,
+    "documented": false,
+    "doc_url": "http://faderfox.de/ec4.html",
+    "notes": "Faderfox controllers have no software editor by design. All configuration is done manually on the device itself or via MIDI learn mode. Presets can be stored in the device. No computer software, no file import/export. Not a viable export target."
+  },
+  {
+    "controller": "TouchOSC (iPad/iPhone/Android/desktop)",
+    "app": "TouchOSC Editor (built into app)",
+    "import_supported": true,
+    "format": ".tosc (ZIP-compressed XML internally)",
+    "required_fields": ["control_type", "midi_message_type", "channel", "value"],
+    "optional_fields": ["min", "max", "name", "color", "position"],
+    "documented": true,
+    "doc_url": "https://hexler.net/touchosc/manual/complete",
+    "notes": "TouchOSC .tosc files are ZIP archives containing XML. The format can be exported as readable XML from the editor ('Export XML' option). Third-party library 'tosclib' (Python) can generate and parse .tosc files programmatically. MIDI fields include: message type (CC, Note, PC, etc.), channel, controller/value number (can be constant or expression), value range (min/max scaling). The .tosc file defines the entire UI layout AND the MIDI routing — importing a custom CC map would mean generating a full layout file with controls wired to specific CCs. Viable target with effort, but requires generating a complete layout, not just a CC list."
+  },
+  {
+    "controller": "Lemur (iOS/Android)",
+    "app": "Lemur Editor (desktop companion)",
+    "import_supported": true,
+    "format": ".jzml (XML text file)",
+    "required_fields": ["object_type", "midi_message", "channel"],
+    "optional_fields": ["cc", "name", "min", "max", "script"],
+    "documented": true,
+    "doc_url": "https://support.midikinetics.com/wp-content/uploads/2024/10/Lemur-User-Guide.pdf",
+    "notes": "Lemur project files (.jzml) are plain text XML files. They define the full UI layout (objects like faders, knobs, buttons) and their MIDI/OSC routing. MIDI assignments use hex-encoded MIDI message bytes in XML attributes. The format is human-editable with an XML editor. Submodule files use .jzlib extension and can be imported into existing projects. Viable target with effort, but like TouchOSC, requires generating a full layout, not just a parameter list. The XML structure is documented in the Lemur User Guide."
+  }
+]
