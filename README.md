@@ -11,10 +11,12 @@ Browse CC and NRPN parameters for 400+ hardware MIDI devices — directly in you
 
 ## What it does
 
-- Search across 400+ hardware devices from 120+ manufacturers
+- Search across 400+ hardware devices from 121 manufacturers
 - Browse CC and NRPN parameters with min/max ranges, descriptions, and sections
-- Filter within a device's parameter list
+- Filter by NRPN — stacks with search (e.g. NRPN active + "Korg" = Korg devices with NRPN)
+- Filter within a device's parameter list by section chips or keyword
 - Click any parameter row to copy its CC or NRPN number to the clipboard
+- Export parameters as CSV or JSON — download for any device
 - Copy TSV button exports the full (or filtered) parameter list — paste into Excel or Numbers
 - Search history saved in your browser (last 8 searches)
 
@@ -56,10 +58,16 @@ Requires Node.js 18+. Fetches ~400 CSV files from GitHub and writes `index.html`
 
 ## What's New
 
-**v2026.07.08**
-- Light / dark mode toggle (respects system theme, choice saved in browser)
-- Clear button in search field
-- Version number shown in header
+**v1.0.19**
+- Export parameters as CSV or JSON — download button in device detail view
+- Multi-device export coming in a future update
+
+**v1.0.18**
+- NRPN filter chip — additive, stacks with search, persists while typing
+- Web version launched
+
+**v1.0.17 and earlier**
+- Light / dark mode toggle, search history, section chips, copy TSV
 
 ---
 
